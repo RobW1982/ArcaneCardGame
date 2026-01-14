@@ -32,7 +32,6 @@
 
         // Game logic
         let currentGameState = null;
-        let isFlipping = false;
 
         const arcaneSymbols = ['☽', '✦', '⚝', '⛤', '⛧', '◉'];
 
@@ -54,7 +53,8 @@
             return {
                 cards: newCards,
                 flipped: Array(6).fill(false),
-                gameCount: count
+                gameCount: count,
+                isFlipping: false
             };
         }
 
@@ -67,16 +67,15 @@
         }
 
         async function flipCard(index) {
-            if (isFlipping || !currentGameState || currentGameState.flipped[index]) return;
-            
-            isFlipping = true;
+            if (!currentGameState || currentGameState.isFlipping || currentGameState.flipped[index]) return;
             
             const newFlipped = [...currentGameState.flipped];
             newFlipped[index] = true;
             
             const newState = {
                 ...currentGameState,
-                flipped: newFlipped
+                flipped: newFlipped,
+                isFlipping: true
             };
             
             await set(gameStateRef, newState);
@@ -86,7 +85,8 @@
                 // Flip all cards back
                 const allUnflipped = {
                     ...currentGameState,
-                    flipped: Array(6).fill(false)
+                    flipped: Array(6).fill(false),
+                    isFlipping: true
                 };
                 await set(gameStateRef, allUnflipped);
                 
@@ -94,10 +94,6 @@
                 setTimeout(async () => {
                     const newGame = createNewGame(currentGameState.gameCount + 1);
                     await set(gameStateRef, newGame);
-                    // Reset flipping flag after new game is set
-                    setTimeout(() => {
-                        isFlipping = false;
-                    }, 100);
                 }, 700);
             }, 2000);
         }
@@ -129,7 +125,7 @@
                         ${state.cards.map((symbol, index) => `
                             <div
                                 id="card-${index}"
-                                class="relative w-28 h-40 cursor-pointer ${isFlipping ? 'pointer-events-none' : ''}"
+                                class="relative w-28 h-40 cursor-pointer ${state.isFlipping ? 'pointer-events-none' : ''}"
                                 style="perspective: 1000px;"
                             >
                                 <div
