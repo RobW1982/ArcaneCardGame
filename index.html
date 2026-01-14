@@ -94,13 +94,25 @@
                 setTimeout(async () => {
                     const newGame = createNewGame(currentGameState.gameCount + 1);
                     await set(gameStateRef, newGame);
-                    isFlipping = false;
+                    // Reset flipping flag after new game is set
+                    setTimeout(() => {
+                        isFlipping = false;
+                    }, 100);
                 }, 700);
             }, 2000);
         }
 
+        let lastRenderedState = null;
+
         function renderGame(state) {
             currentGameState = state;
+            
+            // Only re-render if the state actually changed
+            if (lastRenderedState && 
+                JSON.stringify(lastRenderedState) === JSON.stringify(state)) {
+                return;
+            }
+            lastRenderedState = state;
             
             const root = document.getElementById('root');
             root.innerHTML = `
